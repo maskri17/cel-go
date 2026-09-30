@@ -54,7 +54,6 @@ def conformance_test(name, data, dashboard, skip_tests = []):
         data = ["//conformance:go_default_test"] + data,
         tags = [
             "guitar",
-            "manual",
             "notap",
         ] if dashboard else [],
     )

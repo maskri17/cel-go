@@ -47,10 +47,6 @@ _TESTS_TO_SKIP = [
     # Temporarily failing tests, need a spec update
     "string_ext/value_errors/indexof_out_of_range,lastindexof_out_of_range",
 
-    # Future enhancments.
-    "enums/strong_proto2",
-    "enums/strong_proto3",
-
     # Type deductions
     "type_deductions/wrappers/wrapper_promotion_2",
     "type_deductions/legacy_nullable_types/null_assignable_to_message_parameter_candidate",

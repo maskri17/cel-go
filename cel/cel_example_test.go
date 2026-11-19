@@ -178,4 +178,38 @@ func Example_statefulOverload() {
 	// Output:true
 }
 
+func ExampleConstant() {
+	env, err := cel.NewEnv(
+		cel.Constant("limit", cel.IntType, types.Int(100)),
+		cel.Constant("prefix", cel.StringType, types.String("/api/")),
+		cel.Variable("path", cel.StringType),
+		cel.Variable("count", cel.IntType),
+	)
+	if err != nil {
+		log.Fatalf("environment creation error: %s\n", err)
+	}
+
+	// Compile (or Parse + Check) is required so Constant declarations are inlined into the AST.
+	ast, iss := env.Compile(`path.startsWith(prefix) && count <= limit`)
+	if iss.Err() != nil {
+		log.Fatalf("compile error: %s\n", iss.Err())
+	}
+
+	prg, err := env.Program(ast)
+	if err != nil {
+		log.Fatalf("program creation error: %s\n", err)
+	}
+
+	out, _, err := prg.Eval(map[string]any{
+		"path":  "/api/v1/items",
+		"count": 42,
+	})
+	if err != nil {
+		log.Fatalf("runtime error: %s\n", err)
+	}
+
+	fmt.Println(out)
+	// Output:true
+}
+
 type contextString string

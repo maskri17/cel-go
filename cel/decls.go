@@ -132,7 +132,14 @@ var (
 // Type holds a reference to a runtime type with an optional type-checked set of type parameters.
 type Type = types.Type
 
-// Constant creates an instances of an identifier declaration with a variable name, type, and value.
+// Constant creates an instance of an identifier declaration with a variable name, type, and value.
+//
+// The value v must be a CEL ref.Val (for example, types.String("..."), types.Int(42),
+// types.Double(3.14), or types.Bool(true) from "cel.dev/cel-go/common/types").
+//
+// Constant values are substituted into the AST during type-checking (Env.Compile or Env.Check)
+// rather than at parse time. Evaluating an unchecked AST produced only by Env.Parse will not
+// resolve Constant identifiers unless those identifiers are also supplied in the runtime Activation.
 func Constant(name string, t *Type, v ref.Val) EnvOption {
 	return func(e *Env) (*Env, error) {
 		e.variables = append(e.variables, decls.NewConstant(name, t, v))

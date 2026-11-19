@@ -974,3 +974,65 @@ func (nonComparableCelSizingStrategy) TrackSize(cost.TrackContext, ref.Val) (uin
 	return 1, true
 }
 
+func TestDefaultCostEstimatorsAndStandaloneCostLimit(t *testing.T) {
+	env := testEnv(t, Variable("str", StringType))
+	ast, iss := env.Compile(`str.startsWith("pre")`)
+	if iss.Err() != nil {
+		t.Fatalf("env.Compile() failed: %v", iss.Err())
+	}
+
+	nilEst, err := env.EstimateCost(ast, nil)
+	if err != nil {
+		t.Fatalf("env.EstimateCost(ast, nil) failed: %v", err)
+	}
+	defEst, err := env.EstimateCost(ast, cost.DefaultEstimator())
+	if err != nil {
+		t.Fatalf("env.EstimateCost(ast, cost.DefaultEstimator()) failed: %v", err)
+	}
+	if nilEst != defEst {
+		t.Errorf("DefaultEstimator() estimate = %+v, want %+v", defEst, nilEst)
+	}
+
+	in := map[string]any{"str": "prefix"}
+	prgNil, err := env.Program(ast, CostTracking(nil))
+	if err != nil {
+		t.Fatalf("env.Program(CostTracking(nil)) failed: %v", err)
+	}
+	_, detNil, err := prgNil.Eval(in)
+	if err != nil {
+		t.Fatalf("prgNil.Eval() failed: %v", err)
+	}
+
+	prgDef, err := env.Program(ast, CostTracking(cost.DefaultActualCostEstimator()))
+	if err != nil {
+		t.Fatalf("env.Program(CostTracking(DefaultActualCostEstimator())) failed: %v", err)
+	}
+	_, detDef, err := prgDef.Eval(in)
+	if err != nil {
+		t.Fatalf("prgDef.Eval() failed: %v", err)
+	}
+	if detNil.ActualCost() == nil || detDef.ActualCost() == nil || *detNil.ActualCost() != *detDef.ActualCost() {
+		t.Fatalf("ActualCost mismatch: nil=%v, DefaultActualCostEstimator=%v", detNil.ActualCost(), detDef.ActualCost())
+	}
+
+	// Standalone CostLimit enforces runtime limits without explicitly passing CostTracking.
+	prgPass, err := env.Program(ast, CostLimit(*detNil.ActualCost()))
+	if err != nil {
+		t.Fatalf("env.Program(CostLimit) failed: %v", err)
+	}
+	if _, detPass, err := prgPass.Eval(in); err != nil {
+		t.Fatalf("prgPass.Eval() failed: %v", err)
+	} else if detPass.ActualCost() == nil || *detPass.ActualCost() != *detNil.ActualCost() {
+		t.Errorf("standalone CostLimit ActualCost = %v, want %d", detPass.ActualCost(), *detNil.ActualCost())
+	}
+
+	prgFail, err := env.Program(ast, CostLimit(0))
+	if err != nil {
+		t.Fatalf("env.Program(CostLimit(0)) failed: %v", err)
+	}
+	_, _, err = prgFail.Eval(in)
+	if err == nil || !strings.Contains(err.Error(), "actual cost limit exceeded") {
+		t.Errorf("prgFail.Eval() error = %v, want error containing 'actual cost limit exceeded'", err)
+	}
+}
+

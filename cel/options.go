@@ -959,7 +959,9 @@ func CostTrackerOptions(costOpts ...cost.TrackerOption) ProgramOption {
 	}
 }
 
-// CostTracking enables cost tracking and registers a ActualCostEstimator that can optionally provide a runtime cost estimate for any function calls.
+// CostTracking enables cost tracking and registers an ActualCostEstimator that can optionally provide a runtime cost
+// estimate for any function calls. Passing nil or cost.DefaultActualCostEstimator() tracks runtime cost using CEL's
+// built-in standard cost model.
 func CostTracking(costEstimator cost.ActualCostEstimator) ProgramOption {
 	return func(p *prog) (*prog, error) {
 		p.callCostEstimator = costEstimator
@@ -998,8 +1000,10 @@ func MemoryLimit(memLimit uint32) ProgramOption {
 	}
 }
 
-// CostLimit enables cost tracking and sets configures program evaluation to exit early with a
-// "runtime cost limit exceeded" error if the runtime cost exceeds the costLimit.
+// CostLimit enables cost tracking and configures program evaluation to exit early with a
+// "runtime cost limit exceeded" error if the runtime cost exceeds the costLimit. CostLimit
+// automatically enables standard runtime cost tracking without requiring CostTracking(...)
+// unless custom runtime call cost estimates are needed.
 // The CostLimit is a metric that corresponds to the number and estimated expense of operations
 // performed while evaluating an expression. It is indicative of CPU usage, not memory usage.
 func CostLimit(costLimit uint64) ProgramOption {

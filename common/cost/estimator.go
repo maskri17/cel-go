@@ -40,6 +40,22 @@ type Estimator interface {
 	EstimateSize(element AstNode) *SizeEstimate
 }
 
+type defaultEstimator struct{}
+
+func (defaultEstimator) EstimateCallCost(function, overloadID string, target *AstNode, args []AstNode) *CallEstimate {
+	return nil
+}
+
+func (defaultEstimator) EstimateSize(element AstNode) *SizeEstimate {
+	return nil
+}
+
+// DefaultEstimator returns a stateless Estimator whose methods return nil, deferring all cost
+// and size estimation to CEL's built-in standard overload estimators and sizing strategy.
+func DefaultEstimator() Estimator {
+	return defaultEstimator{}
+}
+
 // AstNode represents an AST node for estimating cost.
 type AstNode interface {
 	// Path returns a field path through the provided type declarations to the type of the AstNode, or nil if the AstNode does not

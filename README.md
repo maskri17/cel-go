@@ -45,6 +45,7 @@ scripting language is too resource intensive. To get started, try the
   * [Macros](#macros)
   * [Evaluate](#evaluate)
   * [Errors](#Errors)
+* [Cost Model](docs/cost-model.md)
 * [Examples](examples/README.md)
 * [Install](#install)
 * [Common Questions](#common-questions)
@@ -152,6 +153,10 @@ out, details, err := prg.Eval(map[string]interface{}{
     "group": "acme.co"})
 fmt.Println(out) // 'true'
 ```
+
+To bound evaluation cost or estimate expression complexity ahead of evaluation
+using `Env.EstimateCost`, `cel.CostTracking`, and `cel.CostLimit`, see the
+[Cost Model](docs/cost-model.md) guide.
 
 #### Partial State
 

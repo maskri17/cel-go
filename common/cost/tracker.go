@@ -31,6 +31,19 @@ type ActualCostEstimator interface {
 	CallCost(function, overloadID string, args []ref.Val, result ref.Val) *uint64
 }
 
+type defaultActualCostEstimator struct{}
+
+func (defaultActualCostEstimator) CallCost(function, overloadID string, args []ref.Val, result ref.Val) *uint64 {
+	return nil
+}
+
+// DefaultActualCostEstimator returns a stateless ActualCostEstimator whose CallCost method
+// returns nil, deferring runtime cost tracking to CEL's built-in standard overload trackers
+// and base operation costs.
+func DefaultActualCostEstimator() ActualCostEstimator {
+	return defaultActualCostEstimator{}
+}
+
 // FunctionTracker computes the actual cost of evaluating the functions with the given arguments and result.
 type FunctionTracker func(args []ref.Val, result ref.Val) *uint64
 
